@@ -1,25 +1,48 @@
-export const ANALYSIS_PROMPT = `
+export const ACADEMIC_PROMPT = `
 
-Analyze this image carefully.
+Analyze this image for academic learning.
 
-Return ONLY valid JSON.
-
-Structure:
+Return ONLY JSON:
 
 {
- "objects": [
-   "object 1",
-   "object 2"
- ],
- "context": "describe the scene",
- "activities": "what is happening",
- "recommendations": "give useful advice"
+"objects":[],
+"context":"",
+"activities":"",
+"recommendations":""
 }
 
-Rules:
+`;
 
-- Do not add markdown
-- Do not add explanation
-- Only JSON
+
+export const SAFETY_PROMPT = `
+
+Analyze this image for safety hazards.
+
+Return ONLY JSON:
+
+{
+"objects":[],
+"context":"",
+"activities":"",
+"recommendations":""
+}
+
+`;
+
+
+export const INVENTORY_PROMPT = `
+
+Analyze this image as an inventory system.
+
+Identify items.
+
+Return ONLY JSON:
+
+{
+"objects":[],
+"context":"",
+"activities":"",
+"recommendations":""
+}
 
 `;

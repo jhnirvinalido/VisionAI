@@ -8,14 +8,21 @@ import {
 } from "@react-navigation/native-stack";
 
 
+
 import CameraScreen from "./CameraScreen";
+
 import PreviewScreen from "./screens/PreviewScreen";
+
 import ResultScreen from "./screens/ResultScreen";
+
+import HistoryScreen from "./screens/HistoryScreen";
+
 
 
 
 const Stack =
 createNativeStackNavigator();
+
 
 
 
@@ -28,10 +35,14 @@ export default function App(){
 
 
       <Stack.Navigator
+
         initialRouteName="Camera"
+
       >
 
 
+
+        {/* CAMERA */}
 
         <Stack.Screen
 
@@ -47,6 +58,10 @@ export default function App(){
 
 
 
+
+
+        {/* PREVIEW */}
+
         <Stack.Screen
 
           name="Preview"
@@ -61,6 +76,10 @@ export default function App(){
 
 
 
+
+
+        {/* RESULT */}
+
         <Stack.Screen
 
           name="Result"
@@ -68,7 +87,25 @@ export default function App(){
           component={ResultScreen}
 
           options={{
-            title:"Result"
+            title:"Analysis Result"
+          }}
+
+        />
+
+
+
+
+
+        {/* HISTORY */}
+
+        <Stack.Screen
+
+          name="History"
+
+          component={HistoryScreen}
+
+          options={{
+            title:"Scan History"
           }}
 
         />
@@ -76,6 +113,7 @@ export default function App(){
 
 
       </Stack.Navigator>
+
 
 
     </NavigationContainer>

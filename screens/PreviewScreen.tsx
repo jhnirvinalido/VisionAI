@@ -1,5 +1,4 @@
 import {
-    ActivityIndicator,
     Image,
     StyleSheet,
     Text,
@@ -7,77 +6,32 @@ import {
     View,
 } from "react-native";
   
-  import { useState } from "react";
-  
-  import {
-    imageToBase64,
-} from "../lib/gemini";
-  
-  
   
   export default function PreviewScreen({
     route,
-    navigation,
-  }: any) {
+    navigation
+  }:any){
   
   
-    const { photoUri } = route.params;
-  
-  
-    const [loading,setLoading] = useState(false);
-  
-  
-  
-    async function handleAnalyze(){
-  
-  
-      try {
-  
-  
-        setLoading(true);
+    const {
+      photoUri
+    } = route.params;
   
   
   
-        const base64Image =
-          await imageToBase64(photoUri);
+    function goAnalysis(type:string){
   
   
-  
-        console.log(
-          "Base64 length:",
-          base64Image.length
-        );
-  
-  
-  
-        navigation.navigate(
-          "Result",
-          {
-            base64Image,
-          }
-        );
-  
-  
-      } catch(error){
-  
-  
-        console.log(
-          "Image conversion error:",
-          error
-        );
-  
-  
-      } finally {
-  
-  
-        setLoading(false);
-  
-      }
+      navigation.navigate(
+        "Result",
+        {
+          photoUri,
+          type
+        }
+      );
   
   
     }
-  
-  
   
   
   
@@ -87,38 +41,30 @@ import {
   
   
         <Image
-  
           source={{
-            uri: photoUri
+            uri:photoUri
           }}
-  
           style={styles.preview}
-  
-          resizeMode="contain"
-  
         />
   
   
   
-  
-        <View style={styles.actionRow}>
-  
+        <View style={styles.buttons}>
   
   
           <TouchableOpacity
   
-            style={styles.retakeButton}
+            style={styles.button}
   
-            onPress={() =>
-              navigation.goBack()
+            onPress={()=>
+              goAnalysis("academic")
             }
   
           >
   
-            <Text style={styles.buttonText}>
-              Retake
+            <Text style={styles.text}>
+              Academic
             </Text>
-  
   
           </TouchableOpacity>
   
@@ -128,36 +74,43 @@ import {
   
           <TouchableOpacity
   
-            style={styles.analyzeButton}
+            style={styles.button}
   
-            onPress={handleAnalyze}
-  
-            disabled={loading}
+            onPress={()=>
+              goAnalysis("safety")
+            }
   
           >
   
+            <Text style={styles.text}>
+              Safety
+            </Text>
   
-            {
-              loading ?
+          </TouchableOpacity>
   
-              <ActivityIndicator color="white"/>
   
-              :
   
-              <Text style={styles.buttonText}>
-                Analyze
-              </Text>
   
+  
+          <TouchableOpacity
+  
+            style={styles.button}
+  
+            onPress={()=>
+              goAnalysis("inventory")
             }
   
+          >
   
+            <Text style={styles.text}>
+              Inventory
+            </Text>
   
           </TouchableOpacity>
   
   
   
         </View>
-  
   
   
       </View>
@@ -168,80 +121,56 @@ import {
   
   
   
-  
-  
-  
-  
   const styles = StyleSheet.create({
   
   
-    container: {
+  container:{
   
-      flex:1,
+   flex:1,
   
-      backgroundColor:"#000",
+   backgroundColor:"#000"
   
-    },
-  
-  
-  
-    preview: {
-  
-      flex:1,
-  
-      width:"100%",
-  
-    },
+  },
   
   
+  preview:{
   
-    actionRow: {
+   flex:1,
   
-      flexDirection:"row",
+   resizeMode:"contain"
   
-      justifyContent:"space-around",
-  
-      padding:20,
-  
-    },
+  },
   
   
+  buttons:{
   
-    retakeButton: {
+   padding:20,
   
-      backgroundColor:"#5A6472",
+   gap:15
   
-      padding:14,
-  
-      borderRadius:8,
-  
-    },
+  },
   
   
+  button:{
   
-    analyzeButton: {
+   backgroundColor:"#5B3FA3",
   
-      backgroundColor:"#5B3FA3",
+   padding:15,
   
-      padding:14,
+   borderRadius:10,
   
-      borderRadius:8,
+   alignItems:"center"
   
-      minWidth:100,
-  
-      alignItems:"center",
-  
-    },
+  },
   
   
+  text:{
   
-    buttonText: {
+   color:"#fff",
   
-      color:"#fff",
+   fontWeight:"bold"
   
-      fontWeight:"bold",
-  
-    },
+  }
   
   
   });

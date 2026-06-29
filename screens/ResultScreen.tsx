@@ -7,21 +7,22 @@ import {
     View,
 } from "react-native";
   
+  
   import {
     useEffect,
     useState
 } from "react";
   
-  import AsyncStorage from "@react-native-async-storage/async-storage";
-  
   
   import {
-    analyzeImage,
+    analyzeImage
 } from "../lib/gemini";
   
   
   import {
-    ANALYSIS_PROMPT,
+    ACADEMIC_PROMPT,
+    INVENTORY_PROMPT,
+    SAFETY_PROMPT
 } from "../lib/prompt";
   
   
@@ -30,81 +31,75 @@ import {
   
   export default function ResultScreen({
     route
-  }: any) {
+  }:any){
   
   
     const {
-      base64Image
+      photoUri,
+      type
     } = route.params;
   
   
   
-  
     const [loading,setLoading] =
-      useState(true);
-  
-  
-    const [analysis,setAnalysis] =
-      useState<any>(null);
+    useState(true);
   
   
   
+    const [result,setResult] =
+    useState<any>(null);
   
   
-    async function saveHistory(
-      data:any
+  
+  
+  
+  
+    async function imageToBase64(
+      uri:string
     ){
   
+      const response =
+      await fetch(uri);
   
-      try{
   
-  
-        const old =
-        await AsyncStorage.getItem(
-          "history"
-        );
+      const blob =
+      await response.blob();
   
   
   
-        const history =
-        old
-        ? JSON.parse(old)
-        : [];
+      return new Promise<string>(
+        resolve=>{
+  
+  
+          const reader =
+          new FileReader();
   
   
   
-        history.push({
+          reader.onloadend = ()=>{
   
-          ...data,
   
-          date:
-          new Date()
-          .toLocaleString()
-  
-        });
+            const base64 =
+            reader.result
+            ?.toString()
+            ?.split(",")[1];
   
   
   
-        await AsyncStorage.setItem(
-          "history",
-          JSON.stringify(history)
-        );
+            resolve(
+              base64 || ""
+            );
+  
+  
+          };
   
   
   
-        console.log(
-          "Saved to history"
-        );
+          reader.readAsDataURL(blob);
   
   
-      }catch(error){
-  
-        console.log(
-          "History error:",
-          error
-        );
-  
-      }
+        }
+      );
   
   
     }
@@ -118,31 +113,60 @@ import {
     async function runAnalysis(){
   
   
+      let prompt:string =
+      ACADEMIC_PROMPT;
+  
+  
+  
+      if(type==="safety"){
+  
+        prompt =
+        SAFETY_PROMPT;
+  
+      }
+  
+  
+  
+      if(type==="inventory"){
+  
+        prompt =
+        INVENTORY_PROMPT;
+  
+      }
+  
+  
+  
+  
+  
       try{
   
   
-        const geminiResponse =
+        const base64 =
+        await imageToBase64(
+          photoUri
+        );
+  
+  
+  
+  
+        const response =
         await analyzeImage(
-  
-          base64Image,
-  
-          ANALYSIS_PROMPT
-  
+          base64,
+          prompt
         );
   
   
   
         console.log(
-          "Gemini:",
-          geminiResponse
+          "Gemini Response:",
+          response
         );
   
   
   
   
-  
-        let text =
-        geminiResponse
+        const text =
+        response
         ?.candidates?.[0]
         ?.content
         ?.parts?.[0]
@@ -152,55 +176,45 @@ import {
   
   
   
-        try{
+        const clean =
+        (text ?? "")
+        .replace(
+          /```json|```/g,
+          ""
+        );
   
   
-          const clean =
-          text.replace(
-            /```json|```/g,
-            ""
+  
+  
+  
+        if(clean){
+  
+  
+          setResult(
+            JSON.parse(clean)
           );
   
   
   
-          const result =
-          JSON.parse(clean);
+        }else{
   
   
-  
-          setAnalysis(
-            result
-          );
-  
-  
-  
-          await saveHistory(
-            result
-          );
-  
-  
-  
-        }catch{
-  
-  
-          setAnalysis({
+          setResult({
   
             objects:[
-              "Unable to parse"
+              "No result"
             ],
   
   
             context:
-            text ||
-            "No response",
+            "Gemini returned empty response",
   
   
-            activities:
-            "",
+            activities:"",
   
   
             recommendations:
-            ""
+            "Try again"
   
           });
   
@@ -211,33 +225,33 @@ import {
   
   
   
+  
       }catch(error){
   
   
         console.log(
-          "Analysis error:",
+          "Analysis Error:",
           error
         );
   
   
   
-        setAnalysis({
+        setResult({
   
           objects:[
-            "Gemini unavailable"
+            "Analysis failed"
           ],
   
   
           context:
-          "API quota exceeded or network error.",
+          "Gemini quota exceeded or network error",
   
   
-          activities:
-          "",
+          activities:"",
   
   
           recommendations:
-          "Try again later."
+          "Please try again later"
   
         });
   
@@ -247,7 +261,10 @@ import {
   
   
   
+  
       setLoading(false);
+  
+  
   
     }
   
@@ -273,7 +290,6 @@ import {
   
     return (
   
-  
       <ScrollView
         style={styles.container}
       >
@@ -282,7 +298,19 @@ import {
   
         <Text style={styles.title}>
   
-          Analysis Result
+  
+          {
+            type==="academic"
+            ?
+            "Academic Analysis"
+            :
+            type==="safety"
+            ?
+            "Safety Analysis"
+            :
+            "Inventory Analysis"
+          }
+  
   
         </Text>
   
@@ -293,10 +321,7 @@ import {
         <Image
   
           source={{
-  
-            uri:
-            `data:image/jpeg;base64,${base64Image}`
-  
+            uri:photoUri
           }}
   
           style={styles.image}
@@ -310,12 +335,12 @@ import {
   
   
         {
-          loading ? (
+          loading ?
   
   
-            <View
-              style={styles.loading}
-            >
+          (
+  
+            <View style={styles.loading}>
   
   
               <ActivityIndicator
@@ -324,39 +349,33 @@ import {
   
   
               <Text>
-  
-                Analyzing image with Gemini...
-  
+                Gemini analyzing...
               </Text>
   
   
             </View>
   
   
+          )
   
-          ) : (
+          :
   
   
+          (
   
             <View>
   
   
   
   
-              <Text
-                style={styles.sectionTitle}
-              >
-  
+              <Text style={styles.section}>
                 Objects
-  
               </Text>
   
   
   
-  
-  
               {
-                analysis?.objects?.map(
+                result?.objects?.map(
   
                   (
                     item:string,
@@ -366,11 +385,8 @@ import {
   
   
                     <Text
-  
                       key={index}
-  
                       style={styles.text}
-  
                     >
   
                       • {item}
@@ -381,7 +397,6 @@ import {
                   )
   
                 )
-  
               }
   
   
@@ -389,22 +404,14 @@ import {
   
   
   
-  
-              <Text
-                style={styles.sectionTitle}
-              >
-  
+              <Text style={styles.section}>
                 Context
-  
               </Text>
   
   
-              <Text
-                style={styles.text}
-              >
   
-                {analysis?.context}
-  
+              <Text style={styles.text}>
+                {result?.context}
               </Text>
   
   
@@ -413,21 +420,14 @@ import {
   
   
   
-              <Text
-                style={styles.sectionTitle}
-              >
-  
+              <Text style={styles.section}>
                 Activities
-  
               </Text>
   
   
-              <Text
-                style={styles.text}
-              >
   
-                {analysis?.activities}
-  
+              <Text style={styles.text}>
+                {result?.activities}
               </Text>
   
   
@@ -436,25 +436,16 @@ import {
   
   
   
-  
-              <Text
-                style={styles.sectionTitle}
-              >
-  
+              <Text style={styles.section}>
                 Recommendations
-  
               </Text>
   
   
   
-              <Text
-                style={styles.text}
-              >
   
-                {analysis?.recommendations}
-  
+              <Text style={styles.text}>
+                {result?.recommendations}
               </Text>
-  
   
   
   
@@ -468,10 +459,11 @@ import {
   
   
   
+  
+  
       </ScrollView>
   
     );
-  
   
   }
   
@@ -488,31 +480,26 @@ import {
   
   container:{
   
+   flex:1,
   
-    flex:1,
+   backgroundColor:"#fff",
   
-    backgroundColor:"#fff",
-  
-    padding:20
-  
+   padding:20
   
   },
   
   
   
   
-  
   title:{
   
+   fontSize:25,
   
-    fontSize:26,
+   fontWeight:"bold",
   
-    fontWeight:"bold",
+   textAlign:"center",
   
-    textAlign:"center",
-  
-    marginBottom:20
-  
+   marginBottom:20
   
   },
   
@@ -522,13 +509,13 @@ import {
   
   image:{
   
-  
    width:"100%",
   
    height:300,
   
-   borderRadius:10
+   borderRadius:10,
   
+   marginBottom:20
   
   },
   
@@ -538,13 +525,9 @@ import {
   
   loading:{
   
-  
    alignItems:"center",
   
-   marginTop:30,
-  
-   gap:10
-  
+   marginTop:30
   
   },
   
@@ -552,18 +535,15 @@ import {
   
   
   
-  
-  sectionTitle:{
-  
+  section:{
   
    fontSize:20,
   
    fontWeight:"bold",
   
-   marginTop:25,
+   marginTop:20,
   
    marginBottom:10
-  
   
   },
   
@@ -573,11 +553,9 @@ import {
   
   text:{
   
-  
    fontSize:16,
   
    marginBottom:8
-  
   
   }
   
