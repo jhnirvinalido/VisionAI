@@ -7,55 +7,6 @@ const GEMINI_URL =
 
 
 
-export async function imageToBase64(
-  uri:string
-){
-
-  const response =
-  await fetch(uri);
-
-
-  const blob =
-  await response.blob();
-
-
-  return new Promise<string>((resolve)=>{
-
-
-    const reader =
-    new FileReader();
-
-
-    reader.onloadend = ()=>{
-
-
-      const result =
-      reader.result
-      ?.toString();
-
-
-      const base64 =
-      result
-      ?.split(",")[1];
-
-
-      resolve(base64 || "");
-
-    };
-
-
-    reader.readAsDataURL(blob);
-
-
-  });
-
-
-}
-
-
-
-
-
 export async function analyzeImage(
   base64Image:string,
   prompt:string
@@ -67,18 +18,14 @@ export async function analyzeImage(
 
     const response =
     await fetch(
-
       GEMINI_URL,
-
       {
 
         method:"POST",
 
         headers:{
-
           "Content-Type":
           "application/json"
-
         },
 
 
@@ -89,7 +36,6 @@ export async function analyzeImage(
             {
 
               parts:[
-
 
                 {
                   text:prompt
@@ -110,7 +56,6 @@ export async function analyzeImage(
 
                 }
 
-
               ]
 
             }
@@ -120,7 +65,6 @@ export async function analyzeImage(
         })
 
       }
-
     );
 
 
@@ -129,18 +73,10 @@ export async function analyzeImage(
     await response.json();
 
 
-
-    if(!response.ok){
-
-      console.log(
-        "Gemini API Error:",
-        json
-      );
-
-      return null;
-
-    }
-
+    console.log(
+      "Gemini API:",
+      json
+    );
 
 
     return json;
@@ -151,13 +87,14 @@ export async function analyzeImage(
 
 
     console.log(
-      "Gemini Network Error:",
+      "Gemini Error:",
       error
     );
 
 
-    return null;
+    return {};
 
   }
+
 
 }

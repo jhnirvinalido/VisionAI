@@ -45,10 +45,8 @@ import {
     useState(true);
   
   
-  
     const [result,setResult] =
     useState<any>(null);
-  
   
   
   
@@ -76,7 +74,7 @@ import {
   
   
   
-          reader.onloadend = ()=>{
+          reader.onloadend=()=>{
   
   
             const base64 =
@@ -85,14 +83,9 @@ import {
             ?.split(",")[1];
   
   
-  
-            resolve(
-              base64 || ""
-            );
-  
+            resolve(base64 || "");
   
           };
-  
   
   
           reader.readAsDataURL(blob);
@@ -101,9 +94,7 @@ import {
         }
       );
   
-  
     }
-  
   
   
   
@@ -113,27 +104,21 @@ import {
     async function runAnalysis(){
   
   
-      let prompt:string =
+  
+      let prompt =
       ACADEMIC_PROMPT;
   
   
   
       if(type==="safety"){
-  
-        prompt =
-        SAFETY_PROMPT;
-  
+        prompt = SAFETY_PROMPT;
       }
   
   
   
       if(type==="inventory"){
-  
-        prompt =
-        INVENTORY_PROMPT;
-  
+        prompt = INVENTORY_PROMPT;
       }
-  
   
   
   
@@ -148,7 +133,6 @@ import {
   
   
   
-  
         const response =
         await analyzeImage(
           base64,
@@ -158,10 +142,9 @@ import {
   
   
         console.log(
-          "Gemini Response:",
+          "AI RESPONSE:",
           response
         );
-  
   
   
   
@@ -170,15 +153,13 @@ import {
         ?.candidates?.[0]
         ?.content
         ?.parts?.[0]
-        ?.text;
-  
+        ?.text || "";
   
   
   
   
         const clean =
-        (text ?? "")
-        .replace(
+        text.replace(
           /```json|```/g,
           ""
         );
@@ -186,8 +167,7 @@ import {
   
   
   
-  
-        if(clean){
+        try{
   
   
           setResult(
@@ -195,32 +175,28 @@ import {
           );
   
   
-  
-        }else{
+        }catch{
   
   
           setResult({
   
             objects:[
-              "No result"
+              "Detected objects unavailable"
             ],
   
-  
             context:
-            "Gemini returned empty response",
+            text ||
+            "No AI response",
   
-  
-            activities:"",
-  
+            activities:
+            "No activity information",
   
             recommendations:
-            "Try again"
+            "Try another image"
   
           });
   
-  
         }
-  
   
   
   
@@ -230,10 +206,9 @@ import {
   
   
         console.log(
-          "Analysis Error:",
+          "Analysis error:",
           error
         );
-  
   
   
         setResult({
@@ -242,19 +217,16 @@ import {
             "Analysis failed"
           ],
   
-  
           context:
-          "Gemini quota exceeded or network error",
+          "Gemini service unavailable",
   
-  
-          activities:"",
-  
+          activities:
+          "",
   
           recommendations:
-          "Please try again later"
+          "Please try again"
   
         });
-  
   
   
       }
@@ -263,7 +235,6 @@ import {
   
   
       setLoading(false);
-  
   
   
     }
@@ -276,11 +247,31 @@ import {
   
     useEffect(()=>{
   
-  
       runAnalysis();
   
-  
     },[]);
+  
+  
+  
+  
+  
+  
+  
+  
+    function getTitle(){
+  
+  
+      if(type==="academic")
+        return "Academic Analysis";
+  
+  
+      if(type==="safety")
+        return "Safety Analysis";
+  
+  
+      return "Inventory Analysis";
+  
+    }
   
   
   
@@ -292,27 +283,26 @@ import {
   
       <ScrollView
         style={styles.container}
+        showsVerticalScrollIndicator={false}
       >
   
   
   
-        <Text style={styles.title}>
+        <View style={styles.header}>
   
   
-          {
-            type==="academic"
-            ?
-            "Academic Analysis"
-            :
-            type==="safety"
-            ?
-            "Safety Analysis"
-            :
-            "Inventory Analysis"
-          }
+          <Text style={styles.appTitle}>
+            VisionAI
+          </Text>
   
   
-        </Text>
+          <Text style={styles.subtitle}>
+            {getTitle()}
+          </Text>
+  
+  
+        </View>
+  
   
   
   
@@ -333,14 +323,13 @@ import {
   
   
   
-  
         {
           loading ?
   
   
           (
   
-            <View style={styles.loading}>
+            <View style={styles.loadingCard}>
   
   
               <ActivityIndicator
@@ -348,8 +337,8 @@ import {
               />
   
   
-              <Text>
-                Gemini analyzing...
+              <Text style={styles.loadingText}>
+                AI is analyzing image...
               </Text>
   
   
@@ -358,7 +347,9 @@ import {
   
           )
   
+  
           :
+  
   
   
           (
@@ -366,53 +357,34 @@ import {
             <View>
   
   
+              <ResultCard
+                title="Objects"
+              >
+  
+                {
+                  result?.objects?.map(
+                    (
+                      item:string,
+                      index:number
+                    )=>(
   
   
-              <Text style={styles.section}>
-                Objects
-              </Text>
+                      <Text
+                        key={index}
+                        style={styles.item}
+                      >
+  
+                        • {item}
+  
+                      </Text>
   
   
-  
-              {
-                result?.objects?.map(
-  
-                  (
-                    item:string,
-                    index:number
-  
-                  )=>(
-  
-  
-                    <Text
-                      key={index}
-                      style={styles.text}
-                    >
-  
-                      • {item}
-  
-                    </Text>
-  
-  
+                    )
                   )
-  
-                )
-              }
+                }
   
   
-  
-  
-  
-  
-              <Text style={styles.section}>
-                Context
-              </Text>
-  
-  
-  
-              <Text style={styles.text}>
-                {result?.context}
-              </Text>
+              </ResultCard>
   
   
   
@@ -420,38 +392,54 @@ import {
   
   
   
-              <Text style={styles.section}>
-                Activities
-              </Text>
+              <ResultCard
+                title="Context"
+              >
   
+                <Text style={styles.body}>
+                  {result?.context}
+                </Text>
   
-  
-              <Text style={styles.text}>
-                {result?.activities}
-              </Text>
-  
-  
-  
-  
-  
-  
-  
-              <Text style={styles.section}>
-                Recommendations
-              </Text>
+              </ResultCard>
   
   
   
   
-              <Text style={styles.text}>
-                {result?.recommendations}
-              </Text>
+  
+  
+  
+  
+              <ResultCard
+                title="Activities"
+              >
+  
+                <Text style={styles.body}>
+                  {result?.activities}
+                </Text>
+  
+              </ResultCard>
+  
+  
+  
+  
+  
+  
+  
+  
+              <ResultCard
+                title="Recommendation"
+              >
+  
+                <Text style={styles.body}>
+                  {result?.recommendations}
+                </Text>
+  
+              </ResultCard>
   
   
   
   
             </View>
-  
   
           )
   
@@ -473,6 +461,41 @@ import {
   
   
   
+  function ResultCard(
+    {
+      title,
+      children
+    }:any
+  ){
+  
+  
+    return (
+  
+      <View style={styles.card}>
+  
+  
+        <Text style={styles.cardTitle}>
+          {title}
+        </Text>
+  
+  
+        {children}
+  
+  
+      </View>
+  
+    );
+  
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
   const styles =
   StyleSheet.create({
   
@@ -480,26 +503,67 @@ import {
   
   container:{
   
+  
    flex:1,
   
-   backgroundColor:"#fff",
+   backgroundColor:"#F4F5FB",
   
    padding:20
+  
   
   },
   
   
   
   
-  title:{
   
-   fontSize:25,
+  header:{
   
-   fontWeight:"bold",
   
-   textAlign:"center",
+   backgroundColor:"#5B3FA3",
   
-   marginBottom:20
+   padding:22,
+  
+   borderRadius:18,
+  
+   marginBottom:20,
+  
+   shadowOpacity:0.2,
+  
+   shadowRadius:5
+  
+  
+  },
+  
+  
+  
+  
+  
+  appTitle:{
+  
+  
+   color:"#fff",
+  
+   fontSize:30,
+  
+   fontWeight:"bold"
+  
+  
+  },
+  
+  
+  
+  
+  
+  subtitle:{
+  
+  
+   color:"#ddd",
+  
+   marginTop:5,
+  
+   fontSize:16
+  
   
   },
   
@@ -509,13 +573,17 @@ import {
   
   image:{
   
+  
    width:"100%",
   
    height:300,
   
-   borderRadius:10,
+   borderRadius:18,
   
-   marginBottom:20
+   marginBottom:20,
+  
+   backgroundColor:"#ddd"
+  
   
   },
   
@@ -523,11 +591,18 @@ import {
   
   
   
-  loading:{
   
-   alignItems:"center",
+  loadingCard:{
   
-   marginTop:30
+  
+   backgroundColor:"#fff",
+  
+   padding:30,
+  
+   borderRadius:18,
+  
+   alignItems:"center"
+  
   
   },
   
@@ -535,15 +610,51 @@ import {
   
   
   
-  section:{
+  loadingText:{
   
-   fontSize:20,
+  
+   marginTop:15,
+  
+   fontSize:16
+  
+  
+  },
+  
+  
+  
+  
+  
+  card:{
+  
+  
+   backgroundColor:"#fff",
+  
+   borderRadius:18,
+  
+   padding:20,
+  
+   marginBottom:18,
+  
+   elevation:3
+  
+  
+  },
+  
+  
+  
+  
+  
+  cardTitle:{
+  
+  
+   fontSize:21,
   
    fontWeight:"bold",
   
-   marginTop:20,
+   color:"#5B3FA3",
   
-   marginBottom:10
+   marginBottom:12
+  
   
   },
   
@@ -551,11 +662,31 @@ import {
   
   
   
-  text:{
+  body:{
+  
   
    fontSize:16,
   
-   marginBottom:8
+   lineHeight:24,
+  
+   color:"#333"
+  
+  
+  },
+  
+  
+  
+  
+  
+  item:{
+  
+  
+   fontSize:16,
+  
+   marginBottom:8,
+  
+   color:"#333"
+  
   
   }
   
