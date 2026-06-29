@@ -6,95 +6,75 @@ const GEMINI_URL =
 `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
 
 
-
 export async function analyzeImage(
   base64Image:string,
   prompt:string
 ){
 
 
-  try{
+  const response =
+  await fetch(
+    GEMINI_URL,
+    {
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
 
 
-    const response =
-    await fetch(
-      GEMINI_URL,
-      {
+      body:JSON.stringify({
 
-        method:"POST",
+        contents:[
 
-        headers:{
-          "Content-Type":
-          "application/json"
-        },
+          {
+            parts:[
 
+              {
+                text:prompt
+              },
 
-        body:JSON.stringify({
+              {
 
-          contents:[
+                inline_data:{
 
-            {
+                  mime_type:"image/jpeg",
 
-              parts:[
-
-                {
-                  text:prompt
-                },
-
-
-                {
-
-                  inline_data:{
-
-                    mime_type:
-                    "image/jpeg",
-
-                    data:
-                    base64Image
-
-                  }
+                  data:base64Image
 
                 }
 
-              ]
+              }
 
-            }
+            ]
 
-          ]
+          }
 
-        })
+        ]
 
-      }
-    );
+      })
 
-
-
-    const json =
-    await response.json();
+    }
+  );
 
 
-    console.log(
-      "Gemini API:",
-      json
-    );
+  const data =
+  await response.json();
 
 
-    return json;
-
-
-
-  }catch(error){
-
+  if(data.error){
 
     console.log(
-      "Gemini Error:",
-      error
+      "Gemini API Error:",
+      data.error
     );
 
-
-    return {};
+    return null;
 
   }
 
+
+  return data;
 
 }

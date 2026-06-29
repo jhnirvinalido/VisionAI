@@ -7,17 +7,14 @@ import {
     View,
 } from "react-native";
   
-  
   import {
     useEffect,
     useState
 } from "react";
   
-  
   import {
     analyzeImage
 } from "../lib/gemini";
-  
   
   import {
     ACADEMIC_PROMPT,
@@ -27,11 +24,9 @@ import {
   
   
   
-  
-  
   export default function ResultScreen({
     route
-  }:any){
+  }: any) {
   
   
     const {
@@ -47,8 +42,6 @@ import {
   
     const [result,setResult] =
     useState<any>(null);
-  
-  
   
   
   
@@ -73,8 +66,7 @@ import {
           new FileReader();
   
   
-  
-          reader.onloadend=()=>{
+          reader.onloadend = ()=>{
   
   
             const base64 =
@@ -90,7 +82,6 @@ import {
   
           reader.readAsDataURL(blob);
   
-  
         }
       );
   
@@ -100,26 +91,29 @@ import {
   
   
   
-  
     async function runAnalysis(){
   
   
-  
-      let prompt =
+      let prompt:string =
       ACADEMIC_PROMPT;
   
   
   
-      if(type==="safety"){
-        prompt = SAFETY_PROMPT;
+      if(type === "safety"){
+  
+        prompt =
+        SAFETY_PROMPT;
+  
       }
   
   
   
-      if(type==="inventory"){
-        prompt = INVENTORY_PROMPT;
-      }
+      if(type === "inventory"){
   
+        prompt =
+        INVENTORY_PROMPT;
+  
+      }
   
   
   
@@ -142,7 +136,13 @@ import {
   
   
         console.log(
-          "AI RESPONSE:",
+          "TYPE:",
+          type
+        );
+  
+  
+        console.log(
+          "GEMINI:",
           response
         );
   
@@ -157,48 +157,33 @@ import {
   
   
   
-  
-        const clean =
-        text.replace(
-          /```json|```/g,
-          ""
+        console.log(
+          "TEXT:",
+          text
         );
   
   
   
-  
-        try{
-  
-  
-          setResult(
-            JSON.parse(clean)
-          );
-  
-  
-        }catch{
-  
-  
-          setResult({
-  
-            objects:[
-              "Detected objects unavailable"
-            ],
-  
-            context:
-            text ||
-            "No AI response",
-  
-            activities:
-            "No activity information",
-  
-            recommendations:
-            "Try another image"
-  
-          });
-  
-        }
+        const clean =
+        text
+        .replace(
+          /```json/g,
+          ""
+        )
+        .replace(
+          /```/g,
+          ""
+        )
+        .trim();
   
   
+  
+        const data =
+        JSON.parse(clean);
+  
+  
+  
+        setResult(data);
   
   
   
@@ -206,36 +191,37 @@ import {
   
   
         console.log(
-          "Analysis error:",
+          "ERROR:",
           error
         );
+  
   
   
         setResult({
   
           objects:[
-            "Analysis failed"
+            "No detected objects"
           ],
   
+  
           context:
-          "Gemini service unavailable",
+          "No analysis available",
+  
   
           activities:
-          "",
+          "No activity found",
+  
   
           recommendations:
-          "Please try again"
+          "Try another image"
   
         });
-  
   
       }
   
   
   
-  
       setLoading(false);
-  
   
     }
   
@@ -243,15 +229,13 @@ import {
   
   
   
-  
-  
     useEffect(()=>{
+  
   
       runAnalysis();
   
+  
     },[]);
-  
-  
   
   
   
@@ -281,9 +265,13 @@ import {
   
     return (
   
+  
       <ScrollView
+  
         style={styles.container}
+  
         showsVerticalScrollIndicator={false}
+  
       >
   
   
@@ -291,7 +279,7 @@ import {
         <View style={styles.header}>
   
   
-          <Text style={styles.appTitle}>
+          <Text style={styles.logo}>
             VisionAI
           </Text>
   
@@ -302,7 +290,6 @@ import {
   
   
         </View>
-  
   
   
   
@@ -323,13 +310,14 @@ import {
   
   
   
+  
         {
           loading ?
   
   
           (
   
-            <View style={styles.loadingCard}>
+            <View style={styles.loading}>
   
   
               <ActivityIndicator
@@ -337,8 +325,8 @@ import {
               />
   
   
-              <Text style={styles.loadingText}>
-                AI is analyzing image...
+              <Text>
+                Gemini analyzing...
               </Text>
   
   
@@ -348,98 +336,113 @@ import {
           )
   
   
+  
           :
   
   
   
           (
   
-            <View>
+          <View>
   
   
-              <ResultCard
-                title="Objects"
-              >
-  
-                {
-                  result?.objects?.map(
-                    (
-                      item:string,
-                      index:number
-                    )=>(
+            <Card title="Objects">
   
   
-                      <Text
-                        key={index}
-                        style={styles.item}
-                      >
+            {
+              result?.objects?.map(
   
-                        • {item}
+                (
+                  item:any,
+                  index:number
   
-                      </Text>
-  
-  
-                    )
-                  )
-                }
+                )=>(
   
   
-              </ResultCard>
+                  <Text
+                    key={index}
+                    style={styles.text}
+                  >
+  
+                  • {
+                    
+                    typeof item === "string"
+  
+                    ?
+  
+                    item
+  
+                    :
+  
+                    item.name
+                    ?
+  
+                    item.name
+  
+                    :
+  
+                    JSON.stringify(item)
+  
+                  }
+  
+                  </Text>
   
   
+                )
+  
+              )
+            }
   
   
-  
-  
-  
-              <ResultCard
-                title="Context"
-              >
-  
-                <Text style={styles.body}>
-                  {result?.context}
-                </Text>
-  
-              </ResultCard>
-  
-  
-  
-  
-  
-  
-  
-  
-              <ResultCard
-                title="Activities"
-              >
-  
-                <Text style={styles.body}>
-                  {result?.activities}
-                </Text>
-  
-              </ResultCard>
+            </Card>
   
   
   
   
   
+            <Card title="Context">
   
+              <Text style={styles.text}>
+                {result?.context}
+              </Text>
   
-  
-              <ResultCard
-                title="Recommendation"
-              >
-  
-                <Text style={styles.body}>
-                  {result?.recommendations}
-                </Text>
-  
-              </ResultCard>
+            </Card>
   
   
   
   
-            </View>
+  
+  
+  
+            <Card title="Activities">
+  
+              <Text style={styles.text}>
+                {result?.activities}
+              </Text>
+  
+            </Card>
+  
+  
+  
+  
+  
+  
+  
+            <Card title="Recommendations">
+  
+  
+              <Text style={styles.text}>
+                {result?.recommendations}
+              </Text>
+  
+  
+            </Card>
+  
+  
+  
+  
+  
+          </View>
   
           )
   
@@ -447,11 +450,11 @@ import {
   
   
   
-  
-  
       </ScrollView>
   
+  
     );
+  
   
   }
   
@@ -461,33 +464,33 @@ import {
   
   
   
-  function ResultCard(
-    {
-      title,
-      children
-    }:any
+  function Card(
+  {
+   title,
+   children
+  }:any
   ){
   
   
-    return (
+  return(
   
-      <View style={styles.card}>
-  
-  
-        <Text style={styles.cardTitle}>
-          {title}
-        </Text>
+  <View style={styles.card}>
   
   
-        {children}
+  <Text style={styles.cardTitle}>
+  {title}
+  </Text>
   
   
-      </View>
+  {children}
   
-    );
+  
+  </View>
+  
+  );
+  
   
   }
-  
   
   
   
@@ -500,193 +503,123 @@ import {
   StyleSheet.create({
   
   
-  
   container:{
   
+  flex:1,
   
-   flex:1,
+  backgroundColor:"#F4F5FB",
   
-   backgroundColor:"#F4F5FB",
-  
-   padding:20
-  
+  padding:20
   
   },
-  
-  
   
   
   
   header:{
   
+  backgroundColor:"#5B3FA3",
   
-   backgroundColor:"#5B3FA3",
+  padding:25,
   
-   padding:22,
+  borderRadius:20,
   
-   borderRadius:18,
-  
-   marginBottom:20,
-  
-   shadowOpacity:0.2,
-  
-   shadowRadius:5
-  
+  marginBottom:20
   
   },
   
   
   
+  logo:{
   
+  color:"#fff",
   
-  appTitle:{
+  fontSize:30,
   
-  
-   color:"#fff",
-  
-   fontSize:30,
-  
-   fontWeight:"bold"
-  
+  fontWeight:"bold"
   
   },
-  
-  
   
   
   
   subtitle:{
   
+  color:"#eee",
   
-   color:"#ddd",
+  fontSize:16,
   
-   marginTop:5,
-  
-   fontSize:16
-  
+  marginTop:5
   
   },
-  
-  
   
   
   
   image:{
   
+  width:"100%",
   
-   width:"100%",
+  height:300,
   
-   height:300,
+  borderRadius:20,
   
-   borderRadius:18,
-  
-   marginBottom:20,
-  
-   backgroundColor:"#ddd"
-  
+  marginBottom:20
   
   },
   
   
   
+  loading:{
   
+  backgroundColor:"#fff",
   
+  padding:30,
   
-  loadingCard:{
+  alignItems:"center",
   
-  
-   backgroundColor:"#fff",
-  
-   padding:30,
-  
-   borderRadius:18,
-  
-   alignItems:"center"
-  
+  borderRadius:20
   
   },
-  
-  
-  
-  
-  
-  loadingText:{
-  
-  
-   marginTop:15,
-  
-   fontSize:16
-  
-  
-  },
-  
-  
   
   
   
   card:{
   
+  backgroundColor:"#fff",
   
-   backgroundColor:"#fff",
+  padding:20,
   
-   borderRadius:18,
+  borderRadius:18,
   
-   padding:20,
+  marginBottom:18,
   
-   marginBottom:18,
-  
-   elevation:3
-  
+  elevation:4
   
   },
-  
-  
   
   
   
   cardTitle:{
   
+  fontSize:22,
   
-   fontSize:21,
+  fontWeight:"bold",
   
-   fontWeight:"bold",
+  color:"#5B3FA3",
   
-   color:"#5B3FA3",
-  
-   marginBottom:12
-  
+  marginBottom:12
   
   },
   
   
   
+  text:{
   
+  fontSize:16,
   
-  body:{
+  color:"#333",
   
+  lineHeight:24,
   
-   fontSize:16,
-  
-   lineHeight:24,
-  
-   color:"#333"
-  
-  
-  },
-  
-  
-  
-  
-  
-  item:{
-  
-  
-   fontSize:16,
-  
-   marginBottom:8,
-  
-   color:"#333"
-  
+  marginBottom:8
   
   }
   
