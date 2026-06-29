@@ -1,4 +1,5 @@
-const GEMINI_KEY = process.env.EXPO_PUBLIC_GEMINI_KEY;
+const GEMINI_KEY =
+process.env.EXPO_PUBLIC_GEMINI_KEY;
 
 
 const GEMINI_URL =
@@ -6,93 +7,139 @@ const GEMINI_URL =
 
 
 
-// Convert image to Base64
-export async function imageToBase64(uri:string){
+export async function imageToBase64(
+  uri:string
+){
 
-  const response = await fetch(uri);
+  const response =
+  await fetch(uri);
 
-  const blob = await response.blob();
-
-
-  return new Promise<string>((resolve,reject)=>{
-
-    const reader = new FileReader();
+  const blob =
+  await response.blob();
 
 
-    reader.onloadend = () => {
+  return new Promise<string>(
+    resolve=>{
 
-      const base64 =
-        (reader.result as string)
+      const reader =
+      new FileReader();
+
+
+      reader.onloadend=()=>{
+
+        const base64 =
+        reader.result
+        ?.toString()
         .split(",")[1];
 
-      resolve(base64);
 
-    };
+        resolve(base64 || "");
 
-
-    reader.onerror = reject;
+      };
 
 
-    reader.readAsDataURL(blob);
+      reader.readAsDataURL(blob);
 
-  });
+    }
+  );
 
 }
 
 
 
 
-// Gemini Vision
+
 export async function analyzeImage(
+
   base64Image:string,
+
   prompt:string
+
 ){
 
-  const response = await fetch(GEMINI_URL,{
 
-    method:"POST",
-
-    headers:{
-      "Content-Type":"application/json",
-    },
+  try{
 
 
-    body:JSON.stringify({
+    const response =
+    await fetch(
 
-      contents:[
+      GEMINI_URL,
 
-        {
-          parts:[
+      {
+
+        method:"POST",
+
+        headers:{
+
+          "Content-Type":
+          "application/json"
+
+        },
+
+
+        body:JSON.stringify({
+
+          contents:[
 
             {
-              text:prompt
-            },
+
+              parts:[
 
 
-            {
-              inline_data:{
+                {
+                  text:prompt
+                },
 
-                mime_type:"image/jpeg",
 
-                data:base64Image
+                {
 
-              }
+                  inline_data:{
+
+                    mime_type:
+                    "image/jpeg",
+
+                    data:
+                    base64Image
+
+                  }
+
+                }
+
+              ]
+
             }
 
           ]
-        }
 
-      ]
+        })
 
-    })
+      }
 
-  });
-
+    );
 
 
-  const json = await response.json();
+
+    const json =
+    await response.json();
 
 
-  return json;
+
+    return json;
+
+
+
+  }catch(error){
+
+
+    console.log(
+      "Gemini error",
+      error
+    );
+
+
+    return {};
+
+  }
 
 }

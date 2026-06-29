@@ -7,15 +7,24 @@ import {
     View,
 } from "react-native";
   
-  import { useEffect, useState } from "react";
+  import {
+    useEffect,
+    useState
+} from "react";
+  
+  import AsyncStorage from "@react-native-async-storage/async-storage";
+  
   
   import {
     analyzeImage,
 } from "../lib/gemini";
   
+  
   import {
     ANALYSIS_PROMPT,
 } from "../lib/prompt";
+  
+  
   
   
   
@@ -30,26 +39,96 @@ import {
   
   
   
-    const [loading, setLoading] =
+  
+    const [loading,setLoading] =
       useState(true);
   
   
-    const [analysis, setAnalysis] =
+    const [analysis,setAnalysis] =
       useState<any>(null);
   
   
   
-    async function runAnalysis() {
   
   
-      try {
+    async function saveHistory(
+      data:any
+    ){
+  
+  
+      try{
+  
+  
+        const old =
+        await AsyncStorage.getItem(
+          "history"
+        );
+  
+  
+  
+        const history =
+        old
+        ? JSON.parse(old)
+        : [];
+  
+  
+  
+        history.push({
+  
+          ...data,
+  
+          date:
+          new Date()
+          .toLocaleString()
+  
+        });
+  
+  
+  
+        await AsyncStorage.setItem(
+          "history",
+          JSON.stringify(history)
+        );
+  
+  
+  
+        console.log(
+          "Saved to history"
+        );
+  
+  
+      }catch(error){
+  
+        console.log(
+          "History error:",
+          error
+        );
+  
+      }
+  
+  
+    }
+  
+  
+  
+  
+  
+  
+  
+    async function runAnalysis(){
+  
+  
+      try{
   
   
         const geminiResponse =
-          await analyzeImage(
-            base64Image,
-            ANALYSIS_PROMPT
-          );
+        await analyzeImage(
+  
+          base64Image,
+  
+          ANALYSIS_PROMPT
+  
+        );
   
   
   
@@ -60,52 +139,79 @@ import {
   
   
   
+  
+  
         let text =
-          geminiResponse
-          ?.candidates?.[0]
-          ?.content
-          ?.parts?.[0]
-          ?.text;
+        geminiResponse
+        ?.candidates?.[0]
+        ?.content
+        ?.parts?.[0]
+        ?.text;
   
   
   
-        try {
+  
+  
+        try{
   
   
           const clean =
-            text.replace(
-              /```json|```/g,
-              ""
-            );
-  
-  
-          setAnalysis(
-            JSON.parse(clean)
+          text.replace(
+            /```json|```/g,
+            ""
           );
   
   
-        } catch {
+  
+          const result =
+          JSON.parse(clean);
+  
+  
+  
+          setAnalysis(
+            result
+          );
+  
+  
+  
+          await saveHistory(
+            result
+          );
+  
+  
+  
+        }catch{
   
   
           setAnalysis({
   
             objects:[
-              "Unable to parse response"
+              "Unable to parse"
             ],
   
-            context:text,
   
-            activities:"",
+            context:
+            text ||
+            "No response",
   
-            recommendations:""
+  
+            activities:
+            "",
+  
+  
+            recommendations:
+            ""
   
           });
+  
   
         }
   
   
   
-      } catch(error) {
+  
+  
+      }catch(error){
   
   
         console.log(
@@ -114,21 +220,27 @@ import {
         );
   
   
+  
         setAnalysis({
   
           objects:[
-            "Gemini failed"
+            "Gemini unavailable"
           ],
   
-          context:
-          "Unable to analyze image. Check API quota.",
   
-          activities:"",
+          context:
+          "API quota exceeded or network error.",
+  
+  
+          activities:
+          "",
+  
   
           recommendations:
           "Try again later."
   
         });
+  
   
   
       }
@@ -142,11 +254,18 @@ import {
   
   
   
+  
+  
+  
     useEffect(()=>{
+  
   
       runAnalysis();
   
+  
     },[]);
+  
+  
   
   
   
@@ -162,8 +281,11 @@ import {
   
   
         <Text style={styles.title}>
+  
           Analysis Result
+  
         </Text>
+  
   
   
   
@@ -171,8 +293,10 @@ import {
         <Image
   
           source={{
+  
             uri:
             `data:image/jpeg;base64,${base64Image}`
+  
           }}
   
           style={styles.image}
@@ -182,31 +306,53 @@ import {
   
   
   
+  
+  
+  
         {
           loading ? (
   
   
-            <ActivityIndicator
+            <View
+              style={styles.loading}
+            >
   
-              size="large"
   
-              style={{
-                marginTop:30
-              }}
+              <ActivityIndicator
+                size="large"
+              />
   
-            />
+  
+              <Text>
+  
+                Analyzing image with Gemini...
+  
+              </Text>
+  
+  
+            </View>
+  
   
   
           ) : (
+  
   
   
             <View>
   
   
   
-              <Text style={styles.sectionTitle}>
+  
+              <Text
+                style={styles.sectionTitle}
+              >
+  
                 Objects
+  
               </Text>
+  
+  
+  
   
   
               {
@@ -243,12 +389,19 @@ import {
   
   
   
-              <Text style={styles.sectionTitle}>
+  
+              <Text
+                style={styles.sectionTitle}
+              >
+  
                 Context
+  
               </Text>
   
   
-              <Text style={styles.text}>
+              <Text
+                style={styles.text}
+              >
   
                 {analysis?.context}
   
@@ -260,12 +413,18 @@ import {
   
   
   
-              <Text style={styles.sectionTitle}>
+              <Text
+                style={styles.sectionTitle}
+              >
+  
                 Activities
+  
               </Text>
   
   
-              <Text style={styles.text}>
+              <Text
+                style={styles.text}
+              >
   
                 {analysis?.activities}
   
@@ -277,12 +436,20 @@ import {
   
   
   
-              <Text style={styles.sectionTitle}>
+  
+              <Text
+                style={styles.sectionTitle}
+              >
+  
                 Recommendations
+  
               </Text>
   
   
-              <Text style={styles.text}>
+  
+              <Text
+                style={styles.text}
+              >
   
                 {analysis?.recommendations}
   
@@ -290,7 +457,10 @@ import {
   
   
   
+  
+  
             </View>
+  
   
           )
   
@@ -302,6 +472,7 @@ import {
   
     );
   
+  
   }
   
   
@@ -310,68 +481,106 @@ import {
   
   
   
-  const styles = StyleSheet.create({
-  
-  
-    container:{
-  
-      flex:1,
-  
-      backgroundColor:"#fff",
-  
-      padding:20
-  
-    },
+  const styles =
+  StyleSheet.create({
   
   
   
-    title:{
-  
-      fontSize:26,
-  
-      fontWeight:"bold",
-  
-      textAlign:"center",
-  
-      marginBottom:20
-  
-    },
+  container:{
   
   
+    flex:1,
   
-    image:{
+    backgroundColor:"#fff",
   
-      width:"100%",
+    padding:20
   
-      height:300,
   
-      borderRadius:10
-  
-    },
+  },
   
   
   
-    sectionTitle:{
-  
-      fontSize:20,
-  
-      fontWeight:"bold",
-  
-      marginTop:25,
-  
-      marginBottom:10
-  
-    },
   
   
+  title:{
   
-    text:{
   
-      fontSize:16,
+    fontSize:26,
   
-      marginBottom:8
+    fontWeight:"bold",
   
-    }
+    textAlign:"center",
+  
+    marginBottom:20
+  
+  
+  },
+  
+  
+  
+  
+  
+  image:{
+  
+  
+   width:"100%",
+  
+   height:300,
+  
+   borderRadius:10
+  
+  
+  },
+  
+  
+  
+  
+  
+  loading:{
+  
+  
+   alignItems:"center",
+  
+   marginTop:30,
+  
+   gap:10
+  
+  
+  },
+  
+  
+  
+  
+  
+  
+  sectionTitle:{
+  
+  
+   fontSize:20,
+  
+   fontWeight:"bold",
+  
+   marginTop:25,
+  
+   marginBottom:10
+  
+  
+  },
+  
+  
+  
+  
+  
+  text:{
+  
+  
+   fontSize:16,
+  
+   marginBottom:8
+  
+  
+  }
+  
   
   
   });

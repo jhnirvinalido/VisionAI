@@ -1,25 +1,25 @@
 export const ANALYSIS_PROMPT = `
 
-Analyze this image.
+Analyze this image carefully.
 
-Identify:
+Return ONLY valid JSON.
 
-1. Objects - list the physical objects
-
-2. Context - describe the scene
-
-3. Activities - describe what is happening
-
-4. Recommendations - give one suggestion
-
-
-Respond ONLY JSON:
+Structure:
 
 {
-"objects":[""],
-"context":"",
-"activities":"",
-"recommendations":""
+ "objects": [
+   "object 1",
+   "object 2"
+ ],
+ "context": "describe the scene",
+ "activities": "what is happening",
+ "recommendations": "give useful advice"
 }
+
+Rules:
+
+- Do not add markdown
+- Do not add explanation
+- Only JSON
 
 `;
