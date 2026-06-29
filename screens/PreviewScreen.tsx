@@ -7,6 +7,7 @@ import {
 } from "react-native";
   
   
+  
   export default function PreviewScreen({
     route,
     navigation
@@ -35,38 +36,47 @@ import {
   
   
   
+  
+  
     return (
   
       <View style={styles.container}>
   
   
         <Image
+  
           source={{
             uri:photoUri
           }}
+  
           style={styles.preview}
+  
         />
+  
   
   
   
         <View style={styles.buttons}>
   
   
+  
           <TouchableOpacity
   
             style={styles.button}
   
-            onPress={()=>
+            onPress={()=> 
               goAnalysis("academic")
             }
   
           >
   
             <Text style={styles.text}>
-              Academic
+              Academic Analysis
             </Text>
   
+  
           </TouchableOpacity>
+  
   
   
   
@@ -76,17 +86,20 @@ import {
   
             style={styles.button}
   
-            onPress={()=>
+            onPress={()=> 
               goAnalysis("safety")
             }
   
           >
   
             <Text style={styles.text}>
-              Safety
+              Safety Analysis
             </Text>
   
+  
           </TouchableOpacity>
+  
+  
   
   
   
@@ -96,17 +109,19 @@ import {
   
             style={styles.button}
   
-            onPress={()=>
+            onPress={()=> 
               goAnalysis("inventory")
             }
   
           >
   
             <Text style={styles.text}>
-              Inventory
+              Inventory Analysis
             </Text>
   
+  
           </TouchableOpacity>
+  
   
   
   
@@ -121,7 +136,11 @@ import {
   
   
   
+  
+  
+  
   const styles = StyleSheet.create({
+  
   
   
   container:{
@@ -133,6 +152,9 @@ import {
   },
   
   
+  
+  
+  
   preview:{
   
    flex:1,
@@ -140,6 +162,9 @@ import {
    resizeMode:"contain"
   
   },
+  
+  
+  
   
   
   buttons:{
@@ -151,26 +176,61 @@ import {
   },
   
   
+  
+  
+  
+  
   button:{
   
-   backgroundColor:"#5B3FA3",
   
-   padding:15,
+   backgroundColor:"#8A2BE2",
   
-   borderRadius:10,
+   padding:16,
   
-   alignItems:"center"
+   borderRadius:12,
+  
+   alignItems:"center",
+  
+  
+   shadowColor:"#000",
+  
+   shadowOffset:{
+  
+     width:0,
+  
+     height:3
+  
+   },
+  
+  
+   shadowOpacity:0.3,
+  
+  
+   shadowRadius:5,
+  
+  
+   elevation:6
+  
   
   },
   
   
+  
+  
+  
+  
   text:{
+  
   
    color:"#fff",
   
-   fontWeight:"bold"
+   fontWeight:"bold",
+  
+   fontSize:16
+  
   
   }
+  
   
   
   });
